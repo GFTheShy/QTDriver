@@ -8,7 +8,7 @@
 #include <string.h>
 #include "Include/MvCodeReaderCtrl.h"
 #include <QDebug>
-
+#include "camera.h"
 #define LOGDEBUG qDebug()<<__FILE__<<__LINE__
 
 //会跟系统函数定义冲突
@@ -18,11 +18,35 @@
 #define MV_NULL    0
 #endif
 
-class CMvCamera
+class CMvCamera : public Camera
 {
 public:
     CMvCamera();
     ~CMvCamera();
+/*------------------通用方法--------------------*/
+
+    // ch:打开设备 | en:Open Device
+    int Open(void *param = nullptr) override;
+
+    // ch:关闭设备 | en:Close Device
+    int Close() override;
+
+    // ch:开启抓图 | en:Start Grabbing
+    int StartGrabbing() override;
+
+    // ch:停止抓图 | en:Stop Grabbing
+    int StopGrabbing() override;
+
+    // 获取设备连接状态
+    bool isConnected() const override;
+
+    // 获取设备 ID
+    QString deviceId() const override;
+
+    // 设置设备 ID
+    void setDeviceId(const QString &deviceId) override;
+
+/*------------------专属方法--------------------*/
 
     // ch:获取SDK版本号 | en:Get SDK Version
     static int GetSDKVersion();
@@ -33,23 +57,10 @@ public:
     // ch:判断设备是否可达 | en:Is the device accessible
     static bool IsDeviceAccessible(IN MV_CODEREADER_DEVICE_INFO* pstDevInfo, IN unsigned int nAccessMode);
 
-    // ch:打开设备 | en:Open Device
-    int Open(IN const MV_CODEREADER_DEVICE_INFO* pstDevInfo);
-
-    // ch:关闭设备 | en:Close Device
-    int Close();
-
     // ch:注册图像数据回调 | en:Register Image Data CallBack
     int RegisterImageCallBack(unsigned int nChannelID,
                               void(__stdcall* cbOutput)(unsigned char * pData, MV_CODEREADER_IMAGE_OUT_INFO_EX2* pstFrameInfo, void* pUser),
                               void* pUser);
-
-    // ch:开启抓图 | en:Start Grabbing
-    int StartGrabbing();
-
-    // ch:停止抓图 | en:Stop Grabbing
-    int StopGrabbing();
-
 
     // ch:获取设备信息 | en:Get device information
     int GetDeviceInfo(IN MV_CODEREADER_DEVICE_INFO* pstDevInfo);
@@ -100,8 +111,13 @@ public:
     int SaveImage(IN OUT MV_CODEREADER_SAVE_IMAGE_PARAM_EX* pSaveParam);
 
 private:
+    //数据回调函数
+    static void __stdcall ImageCallback(unsigned char * pData, MV_CODEREADER_IMAGE_OUT_INFO_EX2* pstFrameInfo, void* pUser);
 
+private:
+    QString m_deviceId;
     void *m_hDevHandle;
+
 };
 
 #endif//_MV_CAMERA_H_

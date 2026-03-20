@@ -16,19 +16,23 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    camerafactory.cpp \
+    cameramanager.cpp \
     cmvcamera.cpp \
-    grabimgthread.cpp \
     main.cpp \
     widget.cpp
 
 HEADERS += \
+    CameraParam.h \
     Include/MvCodeReaderCtrl.h \
     Include/MvCodeReaderErrorDefine.h \
     Include/MvCodeReaderParams.h \
     Include/MvCodeReaderPixelType.h \
     Include/turbojpeg.h \
+    camera.h \
+    camerafactory.h \
+    cameramanager.h \
     cmvcamera.h \
-    grabimgthread.h \
     widget.h
 
 FORMS += \

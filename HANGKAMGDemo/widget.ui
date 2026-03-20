@@ -68,6 +68,20 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="pushButton_4">
+         <property name="text">
+          <string>打开相机</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_5">
+         <property name="text">
+          <string>关闭相机</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="pushButton_2">
          <property name="text">
           <string>开始采集</string>

@@ -29,8 +29,9 @@ bool CMvCamera::IsDeviceAccessible(MV_CODEREADER_DEVICE_INFO *pstDevInfo, unsign
     return MV_CODEREADER_IsDeviceAccessible(pstDevInfo, nAccessMode);
 }
 
-int CMvCamera::Open(const MV_CODEREADER_DEVICE_INFO *pstDevInfo)
+int CMvCamera::Open(void *param)
 {
+    IN const MV_CODEREADER_DEVICE_INFO* pstDevInfo = (IN const MV_CODEREADER_DEVICE_INFO*) param;
     if (MV_NULL == pstDevInfo)
     {
         return MV_CODEREADER_E_PARAMETER;
@@ -44,6 +45,7 @@ int CMvCamera::Open(const MV_CODEREADER_DEVICE_INFO *pstDevInfo)
     int nRet  = MV_CODEREADER_CreateHandle(&m_hDevHandle, pstDevInfo);
     if (MV_CODEREADER_OK != nRet)
     {
+        emit errorOccurred(m_deviceId, QString("设备ID:%1,创建句柄函数失败.错误码:%2").arg(m_deviceId).arg(nRet));
         return nRet;
     }
 
@@ -52,8 +54,18 @@ int CMvCamera::Open(const MV_CODEREADER_DEVICE_INFO *pstDevInfo)
     {
         MV_CODEREADER_DestroyHandle(m_hDevHandle);
         m_hDevHandle = MV_NULL;
+        emit errorOccurred(m_deviceId, QString("设备ID:%1,打开设备函数失败.错误码:%2").arg(m_deviceId).arg(nRet));
+        return nRet;
+    }
+    //注册回调函数
+    nRet = RegisterImageCallBack(0,ImageCallback,this);
+    if(MV_CODEREADER_OK != nRet)
+    {
+        LOGDEBUG<<"设备ID:"<<m_deviceId<<"注册回调函数失败！";
+        emit errorOccurred(m_deviceId, QString("设备ID:%1,注册回调函数失败.错误码:%2").arg(m_deviceId).arg(nRet));
     }
 
+    emit connectionStateChanged(m_deviceId, true);
     return nRet;
 }
 
@@ -68,7 +80,7 @@ int CMvCamera::Close()
 
     int nRet = MV_CODEREADER_DestroyHandle(m_hDevHandle);
     m_hDevHandle = MV_NULL;
-
+    emit connectionStateChanged(m_deviceId, false);
     return nRet;
 }
 
@@ -188,4 +200,36 @@ int CMvCamera::SetIpConfig(unsigned int nType)
 int CMvCamera::SaveImage(MV_CODEREADER_SAVE_IMAGE_PARAM_EX *pSaveParam)
 {
     return MV_CODEREADER_SaveImage(m_hDevHandle, pSaveParam);
+}
+
+void CMvCamera::ImageCallback(unsigned char *pData, MV_CODEREADER_IMAGE_OUT_INFO_EX2 *pstFrameInfo, void *pUser)
+{
+    LOGDEBUG<<"相机调用了海康的回调函数";
+    // 1. 转换pUser为对象指针
+    CMvCamera* instance = static_cast<CMvCamera*>(pUser);
+
+    // 发射数据结构体
+    MVCodeCameraData CodeData;
+    CodeData.pData = pData;
+    CodeData.pstFrameInfo = pstFrameInfo;
+    emit instance->dataReceived(instance->m_deviceId,CodeData);
+}
+
+bool CMvCamera::isConnected() const
+{
+    if (m_hDevHandle)
+    {
+        return true;
+    }
+    return false;
+}
+
+QString CMvCamera::deviceId() const
+{
+    return m_deviceId;
+}
+
+void CMvCamera::setDeviceId(const QString &deviceId)
+{
+    m_deviceId = deviceId;
 }
